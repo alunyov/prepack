@@ -23,7 +23,7 @@ import { ResidualHeapValueIdentifiers } from "./ResidualHeapValueIdentifiers.js"
 import { ResidualHeapSerializer } from "./ResidualHeapSerializer.js";
 import { getOrDefault } from "./utils.js";
 import type { Referentializer } from "./Referentializer.js";
-import { GeneratorDAG } from "./GeneratorDAG.js";
+import { GeneratorTree } from "./GeneratorTree.js";
 
 const LAZY_OBJECTS_SERIALIZER_BODY_TYPE = "LazyObjectInitializer";
 
@@ -48,7 +48,7 @@ export class LazyObjectsSerializer extends ResidualHeapSerializer {
     options: SerializerOptions,
     additionalFunctionValuesAndEffects: Map<FunctionValue, AdditionalFunctionEffects> | void,
     referentializer: Referentializer,
-    generatorDAG: GeneratorDAG
+    generatorTree: GeneratorTree
   ) {
     super(
       realm,
@@ -60,7 +60,7 @@ export class LazyObjectsSerializer extends ResidualHeapSerializer {
       options,
       additionalFunctionValuesAndEffects,
       referentializer,
-      generatorDAG
+      generatorTree
     );
 
     this._lazyObjectIdSeed = 1;

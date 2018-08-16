@@ -81,7 +81,7 @@ import { ResidualReactElementSerializer } from "./ResidualReactElementSerializer
 import type { Binding } from "../environment.js";
 import { GlobalEnvironmentRecord, DeclarativeEnvironmentRecord, FunctionEnvironmentRecord } from "../environment.js";
 import type { Referentializer } from "./Referentializer.js";
-import { GeneratorDAG } from "./GeneratorDAG.js";
+import { GeneratorTree } from "./GeneratorTree.js";
 import { type Replacement, getReplacement } from "./ResidualFunctionInstantiator.js";
 import { describeValue } from "../utils.js";
 import { getAsPropertyNameExpression } from "../utils/babelhelpers.js";
@@ -122,7 +122,7 @@ export class ResidualHeapSerializer {
     options: SerializerOptions,
     additionalFunctionValuesAndEffects: Map<FunctionValue, AdditionalFunctionEffects> | void,
     referentializer: Referentializer,
-    generatorDAG: GeneratorDAG
+    generatorTree: GeneratorTree
   ) {
     this.realm = realm;
     this.logger = logger;
@@ -208,7 +208,7 @@ export class ResidualHeapSerializer {
     this.rewrittenAdditionalFunctions = new Map();
     this.declarativeEnvironmentRecordsBindings = residualHeapInfo.declarativeEnvironmentRecordsBindings;
     this.globalBindings = residualHeapInfo.globalBindings;
-    this.generatorDAG = generatorDAG;
+    this.generatorTree = generatorTree;
     this.conditionalFeasibility = residualHeapInfo.conditionalFeasibility;
     this.additionalFunctionGenerators = new Map();
     this.declaredGlobalLets = new Map();
@@ -266,7 +266,7 @@ export class ResidualHeapSerializer {
   // TODO: revisit this and fix additional functions to be capable of delaying initializations
   additionalFunctionValueNestedFunctions: Set<FunctionValue>;
 
-  generatorDAG: GeneratorDAG;
+  generatorTree: GeneratorTree;
   conditionalFeasibility: Map<AbstractValue, { t: boolean, f: boolean }>;
   additionalGeneratorRoots: Map<Generator, Set<ObjectValue>>;
 
@@ -853,7 +853,7 @@ export class ResidualHeapSerializer {
     for (let scope of scopes) {
       let s = scope;
       while (s instanceof Generator) {
-        s = this.generatorDAG.getParent(s);
+        s = this.generatorTree.getParent(s);
       }
       if (s === "GLOBAL") return undefined;
       invariant(s instanceof FunctionValue);
@@ -961,7 +961,7 @@ export class ResidualHeapSerializer {
       generators = generators.filter(generator => {
         let s = generator;
         while (s instanceof Generator) {
-          s = this.generatorDAG.getParent(s);
+          s = this.generatorTree.getParent(s);
         }
         return s === "GLOBAL";
       });
@@ -977,7 +977,7 @@ export class ResidualHeapSerializer {
     }
 
     const getGeneratorParent = g => {
-      let s = this.generatorDAG.getParent(g);
+      let s = this.generatorTree.getParent(g);
       return s instanceof Generator ? s : undefined;
     };
     // This value is referenced from more than one generator.
@@ -2214,7 +2214,7 @@ export class ResidualHeapSerializer {
 
   _annotateGeneratorStatements(generator: Generator, statements: Array<BabelNodeStatement>): void {
     let comment = `generator "${generator.getName()}"`;
-    let parent = this.generatorDAG.getParent(generator);
+    let parent = this.generatorTree.getParent(generator);
     if (parent instanceof Generator) {
       comment = `${comment} with parent "${parent.getName()}"`;
     } else if (parent instanceof FunctionValue) {
@@ -2656,7 +2656,7 @@ export class ResidualHeapSerializer {
     for (let s of scopes)
       if (s instanceof Generator) {
         let text = "";
-        for (; s instanceof Generator; s = this.generatorDAG.getParent(s)) text += "=>" + s.getName();
+        for (; s instanceof Generator; s = this.generatorTree.getParent(s)) text += "=>" + s.getName();
         console.log(`      ${text}`);
       } else {
         invariant(s instanceof FunctionValue);
