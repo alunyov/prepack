@@ -476,6 +476,7 @@ export class Realm {
 
   optimizedFunctions: Map<FunctionValue | AbstractValue, ArgModel | void>;
   arrayNestedOptimizedFunctionsEnabled: boolean;
+  currentOptimizedFunction: FunctionValue | void;
 
   eagerlyRequireModuleDependencies: void | boolean;
 

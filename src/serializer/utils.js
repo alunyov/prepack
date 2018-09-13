@@ -35,6 +35,7 @@ import { GeneratorDAG } from "./GeneratorDAG";
 import type { Scope } from "./types.js";
 import { FunctionEnvironmentRecord } from "../environment";
 import type { Value } from "../values/index";
+import type { AdditionalFunctionEffectsVariantArgs } from "./types";
 
 /**
  * Get index property list length by searching array properties list for the max index key value plus 1.
@@ -209,12 +210,13 @@ export function createAdditionalEffects(
   effects: Effects,
   fatalOnAbrupt: boolean,
   name: string,
-  environmentRecordIdAfterGlobalCode: number,
-  parentAdditionalFunction: FunctionValue | void = undefined
+  additionalFunctionEffects: Map<FunctionValue, AdditionalFunctionEffects>,
+  // These are for forming a proper parent chain for optimized functions
+  variantArgs: AdditionalFunctionEffectsVariantArgs
 ): AdditionalFunctionEffects | null {
-  let generator = Generator.fromEffects(effects, realm, name, environmentRecordIdAfterGlobalCode);
+  let generator = Generator.fromEffects(effects, realm, name, additionalFunctionEffects, variantArgs);
   let retValue: AdditionalFunctionEffects = {
-    parentAdditionalFunction,
+    parentAdditionalFunction: variantArgs.parentOptimizedFunction || undefined,
     effects,
     transforms: [],
     generator,
